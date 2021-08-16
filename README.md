@@ -26,11 +26,12 @@ wordpress/wp-content/plugins
     └── includes
         └── class-wpcfif.php
 ```
+
 2. Wordpressの管理画面で、Contact Form Ifを有効化してください。
 
 3. コンタクトフォームに設定を記述します。
-例）  
-フォーム
+ 
+- フォーム
 ```
 <label> 項目1
     [text column-1] </label>
@@ -41,8 +42,7 @@ wordpress/wp-content/plugins
 <label> 項目3
     [text column-3] </label>
 ```
-
-その他の設定
+- その他の設定
 ```
 requireif-column-2: column-1,eq,1
 requireif-column-3: column-1,eq,2
