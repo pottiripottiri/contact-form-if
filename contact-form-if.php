@@ -2,11 +2,12 @@
 /*
 Plugin Name: Contact Form If
 Author: Satoshi Kaneyasu
-Plugin URI: https://github.com/pottiripottiri/contact-form-if
+Plugin URI: https://github.com/sk-plus/contact-form-if
 Description: This is my great plugin!
 Version: 0.1
-Author URI: https://github.com/pottiripottiri/contact-form-if
-Domain Path: /languages
+Author URI: https://github.com/sk-plus/contact-form-if
+Domain Path: /
+
 Text Domain: contact-form-if
 */
 

@@ -4,14 +4,11 @@
  *
  * @package     Contact_Form_If
  */
-class WPCFIF {
 
-	/**
-	 * WPCF7 インスタンス
-	 *
-	 * @var WPCF7_ContactForm
-	 */
-	private $contact_form = null;
+/**
+ * 　Contact Form If Class
+ */
+class WPCFIF {
 
 	/**
 	 * WPCF7 プロパティ
@@ -21,28 +18,11 @@ class WPCFIF {
 	private $properties = null;
 
 	/**
-	 * WPCF7 タグ
-	 *
-	 * @var array
-	 */
-	private $tags = null;
-
-	/**
-	 * WPCF7 その他設定
-	 *
-	 * @var array
-	 */
-	private $additional_settings = null;
-
-	/**
 	 * コンストラクタ
 	 */
 	public function __construct() {
 		add_filter( 'wpcf7_contact_form_properties', array( $this, 'contact_form_properties' ), 99, 2 );
-		add_filter( 'wpcf7_validate_text', array( $this, 'text_validation_filter' ), 99, 2 );
-		add_filter( 'wpcf7_validate_email', array( $this, 'text_validation_filter' ), 99, 2 );
-		add_filter( 'wpcf7_validate_url', array( $this, 'text_validation_filter' ), 99, 2 );
-		add_filter( 'wpcf7_validate_tel', array( $this, 'text_validation_filter' ), 99, 2 );
+		add_filter( 'wpcf7_validate', array( $this, 'validate_filter' ), 99, 2 );
 	}
 
 	/**
@@ -53,64 +33,35 @@ class WPCFIF {
 	 * @return array
 	 */
 	public function contact_form_properties( $properties, $contact_form ) {
-		$this->properties   = $properties;
-		$this->contact_form = $contact_form;
+		$this->properties = $properties;
 		return $properties;
 	}
 
 	/**
-	 * テキストファイルのバリデーションのフック処理
+	 * バリデーションのフック処理
 	 *
 	 * @param WPCF7_Validation $result instance of WPCF7_Validation.
-	 * @param WPCF7_FormTag    $tag instancr of WPCF7_FormTag.
+	 * @param array            $tags array of WPCF7_FormTag.
 	 * @return WPCF7_Validation
 	 */
-	public function text_validation_filter( $result, $tag ) {
+	public function validate_filter( $result, $tags ) {
 
-		if ( is_null( $this->_tags ) ) {
-			$this->tags = $this->contact_form->scan_form_tags(
-				array(
-					'feature' => '! file-uploading',
-				)
-			);
-		}
+		$require_if_settings = array();
+		$additional_settings = explode( "\n", $this->properties['additional_settings'] );
 
-		if ( is_null( $this->additional_settings ) ) {
-			$this->additional_settings = array();
-			$settings                  = explode( "\n", $this->properties['additional_settings'] );
-
-			foreach ( $settings as $setting ) {
-				if ( preg_match( '/^requireif-([a-zA-Z0-9_-]+)[\t ]*:(.*)$/', $setting, $matches ) ) {
-					$args = explode( ',', trim( $matches[2] ) );
-					if ( is_array( $args ) && count( $args ) === 3 ) {
-						$this->additional_settings[ $matches[1] ] = $args;
-					}
+		foreach ( $additional_settings as $setting ) {
+			if ( preg_match( '/^requireif-([a-zA-Z0-9_-]+)[\t ]*:(.*)$/', $setting, $matches ) ) {
+				$args = explode( ',', trim( $matches[2] ) );
+				if ( is_array( $args ) && count( $args ) === 3 ) {
+					$require_if_settings[ $matches[1] ] = $args;
 				}
 			}
 		}
 
-		$require = false;
-		foreach ( $this->additional_settings as $name => $args ) {
-			if ( $name !== $tag->name ) {
-				continue;
-			}
-
-			// TODO現状TEXTのみ対応.
-			foreach ( $this->tags as $t ) {
-				if ( $args[0] === $t->name ) {
-					$target_value = $this->get_post_value_text( $t->name );
-					if ( (string) $args[2] === (string) $target_value ) {
-						$require = true;
-					}
-					break;
-				}
-			}
-		}
-
-		if ( $require ) {
-			$own_value = $this->get_post_value_text( $tag->name );
-			if ( '' === $own_value ) {
-				$result->invalidate( $tag, wpcf7_get_message( 'invalid_required' ) );
+		foreach ( $tags as $tag ) {
+			$err = $this->not_empty( $tag, $tags, $require_if_settings );
+			if ( '' !== $err ) {
+				$result->invalidate( $tag, $err );
 			}
 		}
 
@@ -118,20 +69,83 @@ class WPCFIF {
 	}
 
 	/**
-	 * POSTパラメータ取得（text)
+	 * 必須チェック
 	 *
-	 * @param string $name POST parameter name.
-	 * @return string
+	 * @param WPCF7_FormTag $tag WPCF7_FormTag.
+	 * @param array         $tags array of WPCF7_FormTag.
+	 * @param array         $settings array of WPCFIF settings.
+	 * @return string　　　Error message.
 	 */
-	private function get_post_value_text( $name ) {
+	private function not_empty( $tag, $tags, $settings ) {
 
-		$value = '';
-		// @codingStandardsIgnoreStart
-		if ( isset( $_POST[ $name ] ) ) {
-			$value = trim( wp_unslash( strtr( (string) $_POST[ $name ], "\n", ' ' ) ) );
+		$err = '';
+
+		$require = false;
+		foreach ( $settings as $name => $args ) {
+			if ( $name !== $tag->name ) {
+				continue;
+			}
+
+			foreach ( $tags as $t ) {
+				if ( $args[0] === $t->name ) {
+					$target_value = $this->get_post_value( $t );
+					switch ( $args[1] ) {
+						case 'eq':
+							if ( (string) $args[2] === (string) $target_value ) {
+								$require = true;
+							}
+							break;
+					}
+				}
+			}
 		}
-		// @codingStandardsIgnoreEnd
 
-		return $value;
+		if ( $require ) {
+			$own_value = $this->get_post_value( $tag, $tag );
+			if (
+				( is_string( $own_value ) && '' === $own_value ) ||
+				( is_array( $own_value ) && empty( $own_value ) )
+			) {
+				$err = wpcf7_get_message( 'invalid_required' );
+			}
+		}
+
+		return $err;
+	}
+
+	/**
+	 * POSTパラメータ取得
+	 *
+	 * @param WPCF7_FormTag $tag WPCF7_FormTag.
+	 * @return string|array ←returnの型が固定されてないのであんまりよくない・・・(TODO)
+	 */
+	private function get_post_value( $tag ) {
+
+		// @codingStandardsIgnoreStart
+		$post_data = $_POST;
+		// @codingStandardsIgnoreEnd
+		// TODO 現状TEXTとSELECTのみ対応
+
+		switch ( $tag->basetype ) {
+			case 'text':
+				if ( isset( $post_data[ $tag->name ] ) ) {
+					return trim( wp_unslash( strtr( (string) $post_data[ $tag->name ], "\n", ' ' ) ) );
+				}
+				break;
+			case 'select':
+				if ( $tag->has_option( 'multiple' ) ) {
+					return array_filter(
+						(array) $post_data[ $tag->name ],
+						function( $val ) {
+							return '' !== $val;
+						}
+					);
+				} else {
+					return isset( $post_data[ $tag->name ] ) ? (string) $post_data[ $tag->name ] : '';
+				}
+				break;
+		}
+
+		return '';
 	}
 }
