@@ -6,9 +6,17 @@
  */
 
 /**
- * 　Contact Form If Class
+ * 　Contact Form If Class≠
  */
 class WPCFIF {
+
+	/**
+	 * WPCF7IF インスタンス
+	 *
+	 * @var WPCFIF
+	 */
+
+	private static $current = null;
 
 	/**
 	 * WPCF7 プロパティ
@@ -18,15 +26,27 @@ class WPCFIF {
 	private $properties = null;
 
 	/**
-	 * コンストラクタ
+	 * コンストラクタ　.
 	 */
-	public function __construct() {
+	private function __construct() {
 		add_filter( 'wpcf7_contact_form_properties', array( $this, 'contact_form_properties' ), 99, 2 );
 		add_filter( 'wpcf7_validate', array( $this, 'validate_filter' ), 99, 2 );
 	}
 
 	/**
-	 * コンタクトフォームのインスタンスなどを控えるためのフック処理
+	 * インスタンス取得
+	 * @return WPCFIF
+	 */
+	public static function get_instance() {
+		if (is_null(self::$current)) {
+			self::$current = new self();
+		}
+		return self::$current;
+	}
+
+
+	/**
+	 * コンタクトフォームのプロパティを控えるためのフック処理
 	 *
 	 * @param array             $properties properties of WPCF7.
 	 * @param WPCF7_ContactForm $contact_form instance of WPCF7.
@@ -35,6 +55,15 @@ class WPCFIF {
 	public function contact_form_properties( $properties, $contact_form ) {
 		$this->properties = $properties;
 		return $properties;
+	}
+
+	/**
+	 * コンタクトフォームのプロパティを返す
+	 *
+	 * @return array
+	 */
+	public function get_properties() {
+		return $this->properties;
 	}
 
 	/**
@@ -90,11 +119,56 @@ class WPCFIF {
 				if ( $args[0] === $t->name ) {
 					$target_value = $this->get_post_value( $t );
 					switch ( $args[1] ) {
-						case 'eq':
+						case 'is_null':
+							if ( is_null($target_value) || '' === $target_value ) {
+								$require = true;
+							}
+							break;
+						case 'not_null':
+							if ( !is_null($target_value) && '' !== $target_value ) {
+								$require = true;
+							}
+							break;							
+						case 'equal':
 							if ( (string) $args[2] === (string) $target_value ) {
 								$require = true;
 							}
 							break;
+						case 'not_equal':
+							if ( (string) $args[2] !== (string) $target_value ) {
+								$require = true;
+							}
+							break;
+						case 'greater_than':
+							if ( (string) $args[2] < (string) $target_value ) {
+								$require = true;
+							}
+							break;
+						case 'greater_equal':
+							if ( (string) $args[2] <= (string) $target_value ) {
+								$require = true;
+							}
+							break;
+						case 'less_than':
+								if ( (string) $args[2] > (string) $target_value ) {
+									$require = true;
+								}
+								break;
+						case 'less_equal':
+							if ( (string) $args[2] >= (string) $target_value ) {
+								$require = true;
+							}
+							break;
+						case 'in':
+							if ( in_array((string) $target_value, explode( ' ', (string) $args[2]) )) {
+								$require = true;
+							}
+							break;
+						case 'not_in':
+							if ( !in_array((string) $target_value, explode( ' ', (string) $args[2]) )) {
+								$require = true;
+							}
+							break;														
 					}
 				}
 			}
@@ -119,33 +193,42 @@ class WPCFIF {
 	 * @param WPCF7_FormTag $tag WPCF7_FormTag.
 	 * @return string|array ←returnの型が固定されてないのであんまりよくない・・・(TODO)
 	 */
-	private function get_post_value( $tag ) {
+	public function get_post_value( $tag ) {
 
-		// @codingStandardsIgnoreStart
-		$post_data = $_POST;
-		// @codingStandardsIgnoreEnd
 		// TODO 現状TEXTとSELECTのみ対応
-
 		switch ( $tag->basetype ) {
 			case 'text':
-				if ( isset( $post_data[ $tag->name ] ) ) {
-					return trim( wp_unslash( strtr( (string) $post_data[ $tag->name ], "\n", ' ' ) ) );
-				}
-				break;
+				return trim( wp_unslash( strtr( (string) $this->filter_input_post($tag->name), "\n", ' ' ) ) );
 			case 'select':
 				if ( $tag->has_option( 'multiple' ) ) {
 					return array_filter(
-						(array) $post_data[ $tag->name ],
+						(array) $this->filter_input_post($tag->name, FILTER_DEFAULT, FILTER_FORCE_ARRAY),
 						function( $val ) {
 							return '' !== $val;
 						}
 					);
 				} else {
-					return isset( $post_data[ $tag->name ] ) ? (string) $post_data[ $tag->name ] : '';
+					return trim( wp_unslash( strtr( (string) $this->filter_input_post($tag->name), "\n", ' ' ) ) );
 				}
 				break;
 		}
 
-		return '';
+		return ;
 	}
+
+	/**
+	 * Gets a specific external variable by name and optionally filters it.
+	 * ユニットテストではPOSTパラメータが渡せないので、モックでPOSTデータ取得メソッドを入れ替えるためにあえてラッピングしたメソッド
+	 * ※protectedなのはモックを作るのにprotected以上である必要があるからです
+	 * @param string $name
+	 * @param int $filter
+	 * @param array|int $options
+	 * @return mixed
+	 */
+	public function filter_input_post( $name, $filter  = FILTER_DEFAULT, $options = 0) {
+        $value = filter_input( INPUT_POST, $name, $filter, $options );
+		$value = apply_filters( 'wpcfif_filter_input_post', $name, $value );
+		return $value;
+    }
+	
 }

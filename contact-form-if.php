@@ -20,6 +20,5 @@ define( 'WPCFIF_PLUGIN_NAME', trim( dirname( WPCFIF_PLUGIN_BASENAME ), '/' ) );
 define( 'WPCFIF_PLUGIN_DIR', untrailingslashit( dirname( WPCFIF_PLUGIN ) ) );
 
 require_once WPCFIF_PLUGIN_DIR . '/includes/class-wpcfif.php';
-
-new WPCFIF();
+WPCFIF::get_instance();
 
