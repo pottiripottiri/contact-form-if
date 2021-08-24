@@ -35,10 +35,11 @@ class WPCFIF {
 
 	/**
 	 * インスタンス取得
+	 *
 	 * @return WPCFIF
 	 */
 	public static function get_instance() {
-		if (is_null(self::$current)) {
+		if ( is_null( self::$current ) ) {
 			self::$current = new self();
 		}
 		return self::$current;
@@ -80,9 +81,9 @@ class WPCFIF {
 
 		foreach ( $additional_settings as $setting ) {
 			if ( preg_match( '/^requireif-([a-zA-Z0-9_-]+)[\t ]*:(.*)$/', $setting, $matches ) ) {
-				$args = explode( ',', trim( $matches[2] ) );
-				if ( is_array( $args ) && count( $args ) === 3 ) {
-					$require_if_settings[ $matches[1] ] = $args;
+				$conditions = explode( ',', trim( $matches[2] ) );
+				if ( is_array( $conditions ) && count( $conditions ) === 3 ) {
+					$require_if_settings[ $matches[1] ] = $conditions;
 				}
 			}
 		}
@@ -108,73 +109,7 @@ class WPCFIF {
 	private function not_empty( $tag, $tags, $settings ) {
 
 		$err = '';
-
-		$require = false;
-		foreach ( $settings as $name => $args ) {
-			if ( $name !== $tag->name ) {
-				continue;
-			}
-
-			foreach ( $tags as $t ) {
-				if ( $args[0] === $t->name ) {
-					$target_value = $this->get_post_value( $t );
-					switch ( $args[1] ) {
-						case 'is_null':
-							if ( is_null($target_value) || '' === $target_value ) {
-								$require = true;
-							}
-							break;
-						case 'not_null':
-							if ( !is_null($target_value) && '' !== $target_value ) {
-								$require = true;
-							}
-							break;							
-						case 'equal':
-							if ( (string) $args[2] === (string) $target_value ) {
-								$require = true;
-							}
-							break;
-						case 'not_equal':
-							if ( (string) $args[2] !== (string) $target_value ) {
-								$require = true;
-							}
-							break;
-						case 'greater_than':
-							if ( (string) $args[2] < (string) $target_value ) {
-								$require = true;
-							}
-							break;
-						case 'greater_equal':
-							if ( (string) $args[2] <= (string) $target_value ) {
-								$require = true;
-							}
-							break;
-						case 'less_than':
-								if ( (string) $args[2] > (string) $target_value ) {
-									$require = true;
-								}
-								break;
-						case 'less_equal':
-							if ( (string) $args[2] >= (string) $target_value ) {
-								$require = true;
-							}
-							break;
-						case 'in':
-							if ( in_array((string) $target_value, explode( ' ', (string) $args[2]) )) {
-								$require = true;
-							}
-							break;
-						case 'not_in':
-							if ( !in_array((string) $target_value, explode( ' ', (string) $args[2]) )) {
-								$require = true;
-							}
-							break;														
-					}
-				}
-			}
-		}
-
-		if ( $require ) {
+		if ( isset( $settings[ $tag->name ] ) && $this->is_required( $settings[ $tag->name ], $tags ) ) {
 			$own_value = $this->get_post_value( $tag, $tag );
 			if (
 				( is_string( $own_value ) && '' === $own_value ) ||
@@ -188,6 +123,140 @@ class WPCFIF {
 	}
 
 	/**
+	 * 必須項目かどうか
+	 *
+	 * @param array $conditions 必須条件定義.
+	 * @param array $tags array of WPCF7_FormTag.
+	 * @return bool
+	 */
+	private function is_required( $conditions, $tags ) {
+
+		$name    = (string) $conditions[0];
+		$operand = (string) $conditions[1];
+		$compare = (string) $conditions[2];
+
+		$target = null;
+		foreach ( $tags as $t ) {
+			if ( $name === $t->name ) {
+				$target = $t;
+				break;
+			}
+		}
+		if ( is_null( $target ) ) {
+			return false;
+		}
+
+		$value = $this->get_post_value( $target );
+		if ( is_string( $value ) ) {
+			$value = (string) $value;
+			switch ( $operand ) {
+				case 'is_null':
+					if ( is_null( $value ) || '' === $value ) {
+						return true;
+					}
+					break;
+				case 'not_null':
+					if ( ! is_null( $value ) && '' !== $value ) {
+						return true;
+					}
+					break;
+				case 'equal':
+					if ( $compare === $value ) {
+						return true;
+					}
+					break;
+				case 'not_equal':
+					if ( $compare !== $value ) {
+						return true;
+					}
+					break;
+				case 'greater_than':
+					if ( $compare < $value ) {
+						return true;
+					}
+					break;
+				case 'greater_equal':
+					if ( $compare <= $value ) {
+						return true;
+					}
+					break;
+				case 'less_than':
+					if ( $compare > $value ) {
+						return true;
+					}
+					break;
+				case 'less_equal':
+					if ( $compare >= $value ) {
+						return true;
+					}
+					break;
+				case 'in':
+					if ( in_array( $value, explode( ' ', $compare ) ) ) {
+						return true;
+					}
+					break;
+				case 'not_in':
+					if ( ! in_array( $value, explode( ' ', $compare ) ) ) {
+						return true;
+					}
+					break;
+			}
+		} elseif ( is_array( $value ) ) {
+			switch ( $operand ) {
+				case 'is_null':
+					if ( 0 >= count( $value ) ) {
+						return true;
+					}
+					break;
+				case 'not_null':
+					if ( 0 < count( $value ) ) {
+						return true;
+					}
+					break;
+				case 'equal':
+					if ( 1 === count( $value ) && $compare === $value[0] ) {
+						return true;
+					}
+					break;
+				case 'not_equal':
+					if ( ! in_array( $compare, $value ) ) {
+						return true;
+					}
+					break;
+				case 'greater_than':
+					if ( is_string( $value ) && $compare < (string) $value ) {
+						return true;
+					}
+					break;
+				case 'in':
+					$heystack = explode( ' ', $compare );
+					foreach ( $value as $v ) {
+						if ( in_array( $v, $heystack ) ) {
+							return true;
+						}
+					}
+					break;
+				case 'not_in':
+					$heystack = explode( ' ', $compare );
+					$exist    = false;
+					foreach ( $value as $v ) {
+						if ( in_array( $v, $heystack ) ) {
+							$exist = true;
+							break;
+						}
+					}
+					if ( ! $exist ) {
+						return true;
+					}
+					break;
+			}
+		}
+
+			return false;
+
+	}
+
+	/**
 	 * POSTパラメータ取得
 	 *
 	 * @param WPCF7_FormTag $tag WPCF7_FormTag.
@@ -195,40 +264,53 @@ class WPCFIF {
 	 */
 	public function get_post_value( $tag ) {
 
-		// TODO 現状TEXTとSELECTのみ対応
 		switch ( $tag->basetype ) {
 			case 'text':
-				return trim( wp_unslash( strtr( (string) $this->filter_input_post($tag->name), "\n", ' ' ) ) );
+				return trim( wp_unslash( strtr( (string) $this->filter_input_post( $tag->name ), "\n", ' ' ) ) );
 			case 'select':
 				if ( $tag->has_option( 'multiple' ) ) {
 					return array_filter(
-						(array) $this->filter_input_post($tag->name, FILTER_DEFAULT, FILTER_FORCE_ARRAY),
+						(array) $this->filter_input_post( $tag->name, FILTER_DEFAULT, FILTER_FORCE_ARRAY ),
 						function( $val ) {
 							return '' !== $val;
 						}
 					);
 				} else {
-					return trim( wp_unslash( strtr( (string) $this->filter_input_post($tag->name), "\n", ' ' ) ) );
+					return trim( wp_unslash( strtr( (string) $this->filter_input_post( $tag->name ), "\n", ' ' ) ) );
 				}
 				break;
+			case 'checkbox':
+				return (array) $this->filter_input_post( $tag->name, FILTER_DEFAULT, FILTER_FORCE_ARRAY );
+			case 'date':
+				return trim( strtr( (string) $this->filter_input_post( $tag->name ), "\n", ' ' ) );
+			case 'number':
+				return trim( strtr( (string) $this->filter_input_post( $tag->name ), "\n", ' ' ) );
+			// case 'acceptance':
+			// return ! empty( $this->filter_input_post($tag->name) ) ? 1 : 0 ;
+			// case 'captcha':
+			// break;
+			// case 'quiz':
+			// break;
+
 		}
 
-		return ;
+		return;
 	}
 
 	/**
 	 * Gets a specific external variable by name and optionally filters it.
 	 * ユニットテストではPOSTパラメータが渡せないので、モックでPOSTデータ取得メソッドを入れ替えるためにあえてラッピングしたメソッド
 	 * ※protectedなのはモックを作るのにprotected以上である必要があるからです
-	 * @param string $name
-	 * @param int $filter
+	 *
+	 * @param string    $name
+	 * @param int       $filter
 	 * @param array|int $options
 	 * @return mixed
 	 */
-	public function filter_input_post( $name, $filter  = FILTER_DEFAULT, $options = 0) {
-        $value = filter_input( INPUT_POST, $name, $filter, $options );
+	public function filter_input_post( $name, $filter = FILTER_DEFAULT, $options = 0 ) {
+		$value = filter_input( INPUT_POST, $name, $filter, $options );
 		$value = apply_filters( 'wpcfif_filter_input_post', $name, $value );
 		return $value;
-    }
-	
+	}
+
 }
