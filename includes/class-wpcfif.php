@@ -219,7 +219,7 @@ class WPCFIF {
 					}
 					break;
 				case 'not_equal':
-					if ( 0 === count( $value ) || 1 < count( $value ) || ! in_array( $compare, $value ) ) {
+					if ( ! in_array( $compare, $value ) ) {
 						return true;
 					}
 					break;
@@ -309,7 +309,7 @@ class WPCFIF {
 	 */
 	public function filter_input_post( $name, $filter = FILTER_DEFAULT, $options = 0 ) {
 		$value = filter_input( INPUT_POST, $name, $filter, $options );
-		$value = apply_filters( 'wpcfif_filter_input_post', $value, $name );
+		$value = apply_filters( 'wpcfif_filter_input_post', $name, $value );
 		return $value;
 	}
 

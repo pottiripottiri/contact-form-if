@@ -69,7 +69,7 @@ EOM;
 		remove_all_filters( 'wpcfif_filter_input_post', 99 );
 		add_filter(
 			'wpcfif_filter_input_post',
-			function( $value, $name ) {
+			function( $name, $value ) {
 				return array(
 					'isnull-1'  => '',
 					'isnull-2'  => '',
