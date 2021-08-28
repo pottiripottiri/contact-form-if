@@ -82,7 +82,7 @@ class WPCFIF {
 		foreach ( $additional_settings as $setting ) {
 			if ( preg_match( '/^requireif-([a-zA-Z0-9_-]+)[\t ]*:(.*)$/', $setting, $matches ) ) {
 				$conditions = explode( ',', trim( $matches[2] ) );
-				if ( is_array( $conditions ) && count( $conditions ) === 3 ) {
+				if ( is_array( $conditions ) && count( $conditions ) >= 3 ) {
 					$require_if_settings[ $matches[1] ] = $conditions;
 				}
 			}
@@ -108,18 +108,22 @@ class WPCFIF {
 	 */
 	private function not_empty( $tag, $tags, $settings ) {
 
-		$err = '';
 		if ( isset( $settings[ $tag->name ] ) && $this->is_required( $settings[ $tag->name ], $tags ) ) {
+			
+			$err = wpcf7_get_message( 'invalid_required' );
+			if (isset($settings[ $tag->name ][3])) {
+				$err = $settings[ $tag->name ][3];	
+			}
 			$own_value = $this->get_post_value( $tag, $tag );
 			if (
 				( is_string( $own_value ) && '' === $own_value ) ||
 				( is_array( $own_value ) && empty( $own_value ) )
 			) {
-				$err = wpcf7_get_message( 'invalid_required' );
+				return $err;
 			}
 		}
 
-		return $err;
+		return '';
 	}
 
 	/**
