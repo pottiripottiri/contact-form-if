@@ -29,6 +29,23 @@ It is a plugin that adds conditional branching to the required check of the Cona
 * in
 * not in
 
+= Example =
+
+This setting is required only when a certain item is 2 or more.
+
+Form
+```
+<label>Text1</label>[text eq-1]
+<label>Text2</label>[text eq-2]
+<br>
+[submit "Submit"]
+```
+
+Additional Settings (1)
+```
+requireif-eq-2: eq-1,greater_equal,1,This item is required when "text 1" is 2 or more.
+```
+
 == Installation ==
 
 1. From the WP admin panel, click “Plugins” -> “Add new”.
