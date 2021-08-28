@@ -41,9 +41,9 @@ Form
 [submit "Submit"]
 ```
 
-Additional Settings (1)
+Additional Settings
 ```
-requireif-eq-2: eq-1,greater_equal,1,This item is required when "text 1" is 2 or more.
+requireif-eq-2: eq-1,greater_equal,2,This item is required when "text 1" is 2 or more.
 ```
 
 == Installation ==
