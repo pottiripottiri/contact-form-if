@@ -1,4 +1,4 @@
-# Contact Form If
+# Contact Form IF
 
 Wordpressのプラグイン：Contact Form 7において、  
 必須チェックなどに条件分岐を付与するプラグインです。  
