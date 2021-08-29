@@ -5,7 +5,7 @@ Author: Satoshi Kaneyasu
 Plugin URI: https://github.com/sk-plus/contact-form-if
 Description: It is a plugin that adds conditional branching to the required check of the Conact form 7.
 Version: 1.0.0
-Author URI: https://github.com/sk-plus/contact-form-if
+Author URI: https://sk-plus.github.io/
 Domain Path: /
 
 Text Domain: contact-form-if
