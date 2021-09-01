@@ -1,5 +1,5 @@
 === Contact Form IF ===
-Contributors: skplus
+Contributors: satoshi256kbyte
 Tags: contact, form, contact form
 Requires at least: 5.8
 Tested up to: 5.8
@@ -16,7 +16,7 @@ It is a plugin that adds conditional branching to the required check of the Cona
 * In the form created with Contact Form 7, you can add a condition to the required check of the item.
 * You can specify various conditions such as when an item has been entered or when it is equal to the specified value.
 
-[Docs](https://sk-plus.github.io/product/contact-form-if/)
+[Docs](https://satoshi256kbyte.github.io/product/contact-form-if/)
 
 = Available conditions =
 
@@ -35,7 +35,7 @@ It is a plugin that adds conditional branching to the required check of the Cona
 
 This setting is required only when a certain item is 2 or more.
 See the developer's site for other use cases.
-[Docs](https://sk-plus.github.io/product/contact-form-if/)
+[Docs](https://satoshi256kbyte.github.io/product/contact-form-if/)
 
 Form
 ```
