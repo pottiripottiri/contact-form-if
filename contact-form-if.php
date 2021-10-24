@@ -1,10 +1,10 @@
 <?php
 /*
 Plugin Name: Contact Form IF
-Author: satoshi256kbyte
+Author: Satoshi Kaneyasu
 Plugin URI: https://github.com/satoshi256kbyte/contact-form-if
 Description: It is a plugin that adds conditional branching to the required check of the Conact form 7.
-Version: 1.0.0
+Version: 1.0.1
 Author URI: https://satoshi256kbyte.github.io/
 Domain Path: /
 

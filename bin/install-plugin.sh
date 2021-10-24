@@ -2,6 +2,8 @@
 
 set -ex
 
-curl -s $WP_PLUGIN -o plugin.zip
-unzip plugin.zip -d -A .plugin
+rm -rf .plugin
+mkdir .plugin
+curl -s https://downloads.wordpress.org/plugin/contact-form-7.5.5.1.zip -o plugin.zip
+unzip plugin.zip -d .plugin
 rm -f plugin.zip

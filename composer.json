@@ -1,0 +1,29 @@
+{
+    "require-dev": {
+        "wp-coding-standards/wpcs": "^2.3",
+        "squizlabs/php_codesniffer": "*",
+		"phpcompatibility/phpcompatibility-wp": "*",
+        "phpunit/phpunit": "7.*"
+    },
+	"scripts": {
+		"post-install-cmd": [
+			"./vendor/bin/phpcs --config-set installed_paths ./vendor/wp-coding-standards/wpcs, ./vendor/phpcompatibility/phpcompatibility-wp, ./vendor/phpcompatibility/php-compatibility, ./vendor/phpcompatibility.phpcompatibility-paragonie",
+			"./vendor/bin/phpcbf --config-set installed_paths ./vendor/wp-coding-standards/wpcs, ./vendor/phpcompatibility/phpcompatibility-wp, ./vendor/phpcompatibility/php-compatibility, ./vendor/phpcompatibility/phpcompatibility-paragonie",
+			"docker-compose exec wp apt-get update -y",
+			"docker-compose exec wp apt-get install -y zip subversion mariadb-client",
+			"docker-compose exec wp rm -rf /var/www/html/wp-content/plugins/contact-form-7",
+			"docker-compose exec wp curl https://downloads.wordpress.org/plugin/contact-form-7.5.5.1.zip -o /var/www/html/wp-content/plugins/plugin.zip",
+			"docker-compose exec wp unzip /var/www/html/wp-content/plugins/plugin.zip -d /var/www/html/wp-content/plugins/",
+			"docker-compose exec wp rm -f /var/www/html/wp-content/plugins/plugin.zip",
+			"docker-compose exec wp curl https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar -O",
+			"docker-compose exec wp chmod +x wp-cli.phar",
+			"docker-compose exec wp mv wp-cli.phar /usr/local/bin/wp",
+			"docker-compose exec wp /var/www/html/wp-content/plugins/contact-form-if/bin/install-wp-tests.sh testdb root password db 5.8.1",
+			"docker-compose exec wp chmod +x /var/www/html/wp-content/plugins/contact-form-if/bin/install-plugin.sh",
+			"docker-compose exec wp /var/www/html/wp-content/plugins/contact-form-if/bin/install-plugin.sh"
+		],
+        "phpunit": [
+			"docker-compose exec wp /bin/bash -c \"cd /var/www/html/wp-content/plugins/contact-form-if;pwd;./vendor/bin/phpunit\""
+        ]
+    }
+}

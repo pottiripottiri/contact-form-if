@@ -1,0 +1,30 @@
+version: "3.9"
+
+services:
+
+  wp:
+    image: wordpress:5.8.1
+    restart: always
+    ports:
+      - 3000:80
+    environment:
+      WORDPRESS_DB_HOST: db
+      WORDPRESS_DB_USER: cfif
+      WORDPRESS_DB_PASSWORD: cfif
+      WORDPRESS_DB_NAME: cfif
+    volumes:
+      - ./:/var/www/html/wp-content/plugins/contact-form-if
+
+  db:
+    image: mysql:5.7
+    restart: always
+    environment:
+      MYSQL_DATABASE: cfif
+      MYSQL_USER: cfif
+      MYSQL_PASSWORD: cfif
+      MYSQL_ROOT_PASSWORD: password
+    volumes:
+      - db:/var/lib/mysql
+
+volumes:
+  db:
