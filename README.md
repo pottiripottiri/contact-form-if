@@ -1,7 +1,7 @@
 # Contact Form If 開発環境
 
 本ファイルはContact Form Ifの開発環境について記述しています。
-Contact Form If の使用方法はreadme.txtの方を御覧ください。
+Contact Form If の使用方法は[readme.txt](readme.txt)の方を御覧ください。
 
 ## 必要なソフト
 
