@@ -26,3 +26,4 @@ plugin.zip
 svn
 vendor
 *.code-workspace
+make-svn.sh
